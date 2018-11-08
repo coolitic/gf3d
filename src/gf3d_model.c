@@ -3,6 +3,8 @@
 #include "gf3d_vgraphics.h"
 #include "simple_logger.h"
 #include "gf3d_obj_load.h"
+#include "gf3d_texture.h"
+#include <stdio.h>
 
 typedef struct
 {

@@ -27,7 +27,7 @@ int main(int argc,char *argv[])
         700,                    //screen height
         vector4d(0.51,0.75,1,1),//background color
         0,                      //fullscreen
-        1                       //validation
+        0                       //validation
     );
     
     // main game loop
