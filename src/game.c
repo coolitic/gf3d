@@ -9,6 +9,7 @@
 #include "gf3d_camera.h"
 #include "gf3d_vector.h"
 #include "gf3d_texture.h"
+#include "entity.h"
 
 int main(int argc,char *argv[])
 {
@@ -16,8 +17,6 @@ int main(int argc,char *argv[])
     const Uint8 * keys;
     Uint32 bufferFrame = 0;
     VkCommandBuffer commandBuffer;
-    Model *model;
-    Model *model2;
     
     init_logger("gf3d.log");    
     slog("gf3d begin");
@@ -32,23 +31,45 @@ int main(int argc,char *argv[])
     
     // main game loop
     slog("gf3d main loop begin");
-    model = gf3d_model_load("agumon");
-    model2 = gf3d_model_load("cube");
+    loadEntity("agumon", "agumon");
+	loadEntity("cube", "cube");
+	int cursorX = 0, cursorY = 0;
+	Uint32 mouseButtons;
+	SDL_SetRelativeMouseMode(1);
+	Vector3D move;
+	float camX, camY;
+	camX = camY = 0;
+	move = vector3d(0, 0, 0);
     while(!done)
     {
         SDL_PumpEvents();   // update SDL's internal event structures
         keys = SDL_GetKeyboardState(NULL); // get the keyboard state for this frame
+		SDL_GetRelativeMouseState(&cursorX, &cursorY);
+
+		camX += cursorX;
+		camY += cursorY;
+		
+		if (keys[SDL_SCANCODE_T])
+			moveEntity(1, vector3d(0.1, 0.1, 0.1));
+		if (keys[SDL_SCANCODE_W])
+			move.z += 1;
+		if (keys[SDL_SCANCODE_A])
+			move.x += 1;
+		if (keys[SDL_SCANCODE_S])
+			move.z -= 1;
+		if (keys[SDL_SCANCODE_D])
+			move.x -= 1;
+
+		updateCamera(-camX / 1000, -camY / 1000, move);
+
         //update game things here
-        
-        gf3d_vgraphics_rotate_camera(0.001);
         
         // configure render command for graphics command pool
         // for each mesh, get a command and configure it from the pool
         bufferFrame = gf3d_vgraphics_render_begin();
         commandBuffer = gf3d_command_rendering_begin(bufferFrame);
 
-            gf3d_model_draw(model,bufferFrame,commandBuffer);
-            gf3d_model_draw(model2,bufferFrame,commandBuffer);
+		drawEntities(bufferFrame, commandBuffer);
             
         gf3d_command_rendering_end(commandBuffer);
         gf3d_vgraphics_render_end(bufferFrame);

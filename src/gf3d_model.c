@@ -107,7 +107,7 @@ void gf3d_model_setup(Model *model)
     gf3d_model_create_descriptor_sets(model);
 }
 
-Model * gf3d_model_load(char * filename)
+Model * gf3d_model_load(char * filename, Uint16 id)
 {
     TextLine assetname;
     Model *model;
@@ -120,7 +120,7 @@ Model * gf3d_model_load(char * filename)
 
     snprintf(assetname,GF3DLINELEN,"images/%s.png",filename);
     model->texture = gf3d_texture_load(assetname);
-    
+	model->id = id;
     gf3d_model_setup(model);
     return model;
 }
@@ -163,6 +163,7 @@ void gf3d_model_create_descriptor_sets(Model *model)
     VkDescriptorBufferInfo bufferInfo = {0};
     VkWriteDescriptorSet descriptorWrite[2] = {0};
     VkDescriptorImageInfo imageInfo = {0};
+	VkBuffer tempBuffer;
 
     layouts = (VkDescriptorSetLayout *)gf3d_allocate_array(sizeof(VkDescriptorSetLayout),gf3d_model.chain_length);
     for (i = 0; i < gf3d_model.chain_length; i++)
@@ -181,18 +182,23 @@ void gf3d_model_create_descriptor_sets(Model *model)
         slog("failed to allocate descriptor sets!");
         return;
     }
-    model->descriptorSetCount = gf3d_model.chain_length;
+
+	model->descriptorSetCount = gf3d_model.chain_length;
+	tempBuffer = gf3d_vgraphics_get_uniform_buffer_by_index(model->id);
+
     for (i = 0; i < gf3d_model.chain_length; i++)
     {
         slog("updating descriptor sets");
         imageInfo.imageLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
         imageInfo.imageView = model->texture->textureImageView;
-        imageInfo.sampler = model->texture->textureSampler;
-    
-        bufferInfo.buffer = gf3d_vgraphics_get_uniform_buffer_by_index(i);
-        bufferInfo.offset = 0;
-        bufferInfo.range = sizeof(UniformBufferObject);        
+        imageInfo.sampler = model->texture->textureSampler;   
         
+		bufferInfo.buffer = tempBuffer;
+		bufferInfo.offset = 0;
+		bufferInfo.range = sizeof(UniformBufferObject);
+
+		model->ubo = bufferInfo.buffer;
+
         descriptorWrite[0].sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
         descriptorWrite[0].dstSet = model->descriptorSets[i];
         descriptorWrite[0].dstBinding = 0;

@@ -34,6 +34,11 @@ void gf3d_matrix_identity(Matrix4 one);
  */
 void gf3d_matrix_zero(Matrix4 zero);
 
+void gf3d_matrix_translate(
+	Matrix4 out,
+	Vector3D move
+);
+
 /**
  * @brief create a translation matrix given the vector
  * @param out the output matrix, the contents of this matrix are overwritten
