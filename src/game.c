@@ -17,7 +17,8 @@ int main(int argc,char *argv[])
     const Uint8 * keys;
     Uint32 bufferFrame = 0;
     VkCommandBuffer commandBuffer;
-    
+	float sens = 0.001;
+
     init_logger("gf3d.log");    
     slog("gf3d begin");
     gf3d_vgraphics_init(
@@ -40,27 +41,38 @@ int main(int argc,char *argv[])
 	float camX, camY;
 	camX = camY = 0;
 	move = vector3d(0, 0, 0);
-    while(!done)
-    {
-        SDL_PumpEvents();   // update SDL's internal event structures
-        keys = SDL_GetKeyboardState(NULL); // get the keyboard state for this frame
+	scaleEntity(1, vector3d(100, 0, 100));
+	posEntity(1, vector3d(0, -5, 0));
+	rotateEntity(1, vector3d(0, 0, 180));
+	float cosCam, sinCam;
+	while (!done)
+	{
+		SDL_PumpEvents();   // update SDL's internal event structures
+		keys = SDL_GetKeyboardState(NULL); // get the keyboard state for this frame
 		SDL_GetRelativeMouseState(&cursorX, &cursorY);
-
+		rotateEntity(0, vector3d(0, 0.1, 0));
 		camX += cursorX;
 		camY += cursorY;
-		
-		if (keys[SDL_SCANCODE_T])
-			moveEntity(1, vector3d(0.1, 0.1, 0.1));
-		if (keys[SDL_SCANCODE_W])
-			move.z += 1;
-		if (keys[SDL_SCANCODE_A])
-			move.x += 1;
-		if (keys[SDL_SCANCODE_S])
-			move.z -= 1;
-		if (keys[SDL_SCANCODE_D])
-			move.x -= 1;
+		cosCam = cos(camX * sens);
+		sinCam = sin(camX * sens);
+		if (keys[SDL_SCANCODE_W]) {
+			move.x -= sinCam;
+			move.z += cosCam;
+		}
+		if (keys[SDL_SCANCODE_A]) {
+			move.x += cosCam;
+			move.z += sinCam;
+		}
+		if (keys[SDL_SCANCODE_S]) {
+			move.x += sinCam;
+			move.z -= cosCam;
+		}
+		if (keys[SDL_SCANCODE_D]) {
+			move.x -= cosCam;
+			move.z -= sinCam;
+		}
 
-		updateCamera(-camX / 1000, -camY / 1000, move);
+		updateCamera(-camX * sens, -camY * sens, move);
 
         //update game things here
         
