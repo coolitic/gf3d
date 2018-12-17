@@ -55,4 +55,5 @@ void scaleEntity(Uint16 index, Vector3D scale) {
 void freeEntity(Uint16 index) {
 	gf3d_line_cpy(entity[index].name, "");
 	gf3d_model_free(entity[index].model);
+	entity[index].model = NULL;
 }

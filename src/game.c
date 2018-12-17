@@ -37,14 +37,16 @@ int main(int argc,char *argv[])
 	int cursorX = 0, cursorY = 0;
 	Uint32 mouseButtons;
 	SDL_SetRelativeMouseMode(1);
-	Vector3D move;
+	Vector3D pos;
 	float camX, camY;
 	camX = camY = 0;
-	move = vector3d(0, 0, 0);
+	pos = vector3d(0, 0, 0);
 	scaleEntity(1, vector3d(100, 0, 100));
 	posEntity(1, vector3d(0, -5, 0));
 	rotateEntity(1, vector3d(0, 0, 180));
 	float cosCam, sinCam;
+	SDL_KeyboardEvent keyEvent;
+	Uint8 repeat = 0; // for filtering out some repeating keys
 	while (!done)
 	{
 		SDL_PumpEvents();   // update SDL's internal event structures
@@ -55,24 +57,41 @@ int main(int argc,char *argv[])
 		camY += cursorY;
 		cosCam = cos(camX * sens);
 		sinCam = sin(camX * sens);
+
+		// if-else block for handling key events that shouldn't repeat
+		if (keys[SDL_SCANCODE_H]) {
+			if (repeat == 0) {
+				loadEntity("agumon", "agumon");
+				repeat = 1;
+			}
+		}
+		else if (keys[SDL_SCANCODE_T]) {
+			if (repeat == 0) {
+				freeEntity(0);
+				repeat = 1;
+			}
+		}
+		else
+			repeat = 0;
+
 		if (keys[SDL_SCANCODE_W]) {
-			move.x -= sinCam;
-			move.z += cosCam;
+			pos.x -= sinCam;
+			pos.z += cosCam;
 		}
 		if (keys[SDL_SCANCODE_A]) {
-			move.x += cosCam;
-			move.z += sinCam;
+			pos.x += cosCam;
+			pos.z += sinCam;
 		}
 		if (keys[SDL_SCANCODE_S]) {
-			move.x += sinCam;
-			move.z -= cosCam;
+			pos.x += sinCam;
+			pos.z -= cosCam;
 		}
 		if (keys[SDL_SCANCODE_D]) {
-			move.x -= cosCam;
-			move.z -= sinCam;
+			pos.x -= cosCam;
+			pos.z -= sinCam;
 		}
 
-		updateCamera(-camX * sens, -camY * sens, move);
+		updateCamera(-camX * sens, -camY * sens, pos);
 
         //update game things here
         
