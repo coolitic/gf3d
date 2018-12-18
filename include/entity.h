@@ -21,6 +21,11 @@ void loadEntity(TextLine name, TextLine modelName);
  */
 void drawEntities(Uint32 bufferFrame, VkCommandBuffer commandBuffer);
 /**
+ * @brief return the index of the 1st occurrence of the inputted name in the entity list
+ * @param name the name to be searched for
+ */
+Uint16 findEntity(TextLine name);
+/**
  * @brief move entity by delta
  * @param index the entity index
  * @param delta the change in position

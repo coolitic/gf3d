@@ -42,7 +42,12 @@ int gf3d_vgraphics_create_buffer(VkDeviceSize size, VkBufferUsageFlags usage, Vk
 void gf3d_vgraphics_copy_buffer(VkBuffer srcBuffer, VkBuffer dstBuffer, VkDeviceSize size);
 
 uint32_t gf3d_vgraphics_find_memory_type(uint32_t typeFilter, VkMemoryPropertyFlags properties);
-
+/**
+ * @brief sets the camera
+ * @param yaw the absolute yaw value
+ * @param pitch the absolute pitch value
+ * @param pos the absolute position
+ */
 void updateCamera(float yaw, float pitch, Vector3D pos);
 
 VkBuffer gf3d_vgraphics_get_uniform_buffer_by_index(Uint32 index);
@@ -52,7 +57,11 @@ Pipeline *gf3d_vgraphics_get_graphics_pipeline();
 Command *gf3d_vgraphics_get_graphics_command_pool();
 
 VkImageView gf3d_vgraphics_create_image_view(VkImage image, VkFormat format);
-
+/**
+ * @brief updates uniform buffer memory with a model matrix
+ * @param currentImage the buffer memory index correlating with the entity index
+ * @param modelMatrix the new modelMatrix for updating the memory
+ */
 void gf3d_vgraphics_update_uniform_buffer(uint32_t currentImage, Matrix4 modelMatrix);
 
 #endif

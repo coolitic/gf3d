@@ -34,6 +34,8 @@ int main(int argc,char *argv[])
     slog("gf3d main loop begin");
     loadEntity("agumon", "agumon");
 	loadEntity("cube", "cube");
+	loadEntity("cube1", "cube");
+	loadEntity("cube2", "cube");
 	int cursorX = 0, cursorY = 0;
 	Uint32 mouseButtons;
 	SDL_SetRelativeMouseMode(1);
@@ -41,18 +43,24 @@ int main(int argc,char *argv[])
 	float camX, camY;
 	camX = camY = 0;
 	pos = vector3d(0, 0, 0);
-	scaleEntity(1, vector3d(100, 0, 100));
-	posEntity(1, vector3d(0, -5, 0));
-	rotateEntity(1, vector3d(0, 0, 180));
 	float cosCam, sinCam;
 	SDL_KeyboardEvent keyEvent;
 	Uint8 repeat = 0; // for filtering out some repeating keys
+
+	// setup starting scene
+	scaleEntity(1, vector3d(100, 0, 100));
+	posEntity(1, vector3d(0, -5, 0));
+	rotateEntity(1, vector3d(0, 0, 180));
+	posEntity(2, vector3d(-20, 0, -20));
+	posEntity(3, vector3d(20, 0, -20));
+
 	while (!done)
 	{
 		SDL_PumpEvents();   // update SDL's internal event structures
 		keys = SDL_GetKeyboardState(NULL); // get the keyboard state for this frame
 		SDL_GetRelativeMouseState(&cursorX, &cursorY);
-		rotateEntity(0, vector3d(0, 0.1, 0));
+
+		// Update absolute yaw and pitch for the camera
 		camX += cursorX;
 		camY += cursorY;
 		cosCam = cos(camX * sens);
@@ -74,6 +82,7 @@ int main(int argc,char *argv[])
 		else
 			repeat = 0;
 
+		// Position is updated with deltas that are dependent on camera orientation
 		if (keys[SDL_SCANCODE_W]) {
 			pos.x -= sinCam;
 			pos.z += cosCam;
@@ -94,7 +103,10 @@ int main(int argc,char *argv[])
 		updateCamera(-camX * sens, -camY * sens, pos);
 
         //update game things here
-        
+		rotateEntity(0, vector3d(0, 0.1, 0));
+		moveEntity(2, vector3d(0.03, 0, 0));
+		moveEntity(3, vector3d(-0.03, 0, 0));
+
         // configure render command for graphics command pool
         // for each mesh, get a command and configure it from the pool
         bufferFrame = gf3d_vgraphics_render_begin();
