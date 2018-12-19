@@ -48,6 +48,7 @@ int main(int argc,char *argv[])
 	Uint8 repeat = 0; // for filtering out some repeating keys
 
 	// setup starting scene
+	posEntity(0, vector3d(0, 0, 20));
 	scaleEntity(1, vector3d(100, 0, 100));
 	posEntity(1, vector3d(0, -5, 0));
 	rotateEntity(1, vector3d(0, 0, 180));
@@ -99,13 +100,15 @@ int main(int argc,char *argv[])
 			pos.x -= cosCam;
 			pos.z -= sinCam;
 		}
+		if (keys[SDL_SCANCODE_G])
+			moveEntity(2, vector3d(1, 0, 0));
+		if (keys[SDL_SCANCODE_F])
+			moveEntity(2, vector3d(-1, 0, 0));
 
 		updateCamera(-camX * sens, -camY * sens, pos);
 
         //update game things here
-		rotateEntity(0, vector3d(0, 0.1, 0));
-		moveEntity(2, vector3d(0.03, 0, 0));
-		moveEntity(3, vector3d(-0.03, 0, 0));
+		rotateEntity(0, vector3d(0, 0.05, 0));
 
         // configure render command for graphics command pool
         // for each mesh, get a command and configure it from the pool

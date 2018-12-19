@@ -36,16 +36,27 @@ Uint16 findEntity(TextLine name) {
 }
 
 void moveEntity(Uint16 index, Vector3D delta) {
-	// check for collisions
-	for (Uint16 x = 0; x < MAX_ENTITIES; x++)
-		if (x != index && entity[x].model != NULL &&
-			abs(entity[index].modelMatrix[3][0] * entity[index].modelMatrix[0][0] - entity[x].modelMatrix[3][0] * entity[x].modelMatrix[0][0]) - 2 < 0 &&
-			abs(entity[index].modelMatrix[3][1] * entity[index].modelMatrix[1][1] - entity[x].modelMatrix[3][1] * entity[x].modelMatrix[1][1]) - 2 < 0 &&
-			abs(entity[index].modelMatrix[3][2] * entity[index].modelMatrix[2][2] - entity[x].modelMatrix[3][2] * entity[x].modelMatrix[2][2]) - 2 < 0)
-			return;	
-	entity[index].modelMatrix[3][0] += delta.x;
-	entity[index].modelMatrix[3][1] += delta.y;
-	entity[index].modelMatrix[3][2] += delta.z;
+	// scale accuracy with speed
+	Uint16 spliceMax = (abs(delta.x) + abs(delta.y) + abs(delta.z)) * 100;
+	ceil(spliceMax);
+	for (Uint16 splice = 0; splice < spliceMax; splice++) {
+		// check for collisions
+		for (Uint16 x = 0; x < MAX_ENTITIES; x++)
+			if (x != index && entity[x].model != NULL &&
+				abs(entity[index].modelMatrix[3][0] * entity[index].modelMatrix[0][0] - entity[x].modelMatrix[3][0] * entity[x].modelMatrix[0][0]) - 2 < 0 &&
+				abs(entity[index].modelMatrix[3][1] * entity[index].modelMatrix[1][1] - entity[x].modelMatrix[3][1] * entity[x].modelMatrix[1][1]) - 2 < 0 &&
+				abs(entity[index].modelMatrix[3][2] * entity[index].modelMatrix[2][2] - entity[x].modelMatrix[3][2] * entity[x].modelMatrix[2][2]) - 2 < 0)
+			{
+				// move back a bit upon detecting a collision so objects dont get stuck
+				entity[index].modelMatrix[3][0] -= delta.x / spliceMax;
+				entity[index].modelMatrix[3][1] -= delta.y / spliceMax;
+				entity[index].modelMatrix[3][2] -= delta.z / spliceMax;
+				return;
+			}
+		entity[index].modelMatrix[3][0] += delta.x / spliceMax;
+		entity[index].modelMatrix[3][1] += delta.y / spliceMax;
+		entity[index].modelMatrix[3][2] += delta.z / spliceMax;
+	}
 }
 
 void posEntity(Uint16 index, Vector3D pos) {

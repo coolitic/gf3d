@@ -1,7 +1,7 @@
 #include "gf3d_model.h"
 #include "gf3d_matrix.h"
 
-#define MAX_ENTITIES 5
+#define MAX_ENTITIES 10
 
 typedef struct
 {
