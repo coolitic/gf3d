@@ -54,6 +54,8 @@ int main(int argc,char *argv[])
 	rotateEntity(1, vector3d(0, 0, 180));
 	posEntity(2, vector3d(-20, 0, -20));
 	posEntity(3, vector3d(20, 0, -20));
+	scaleEntity(2, vector3d(1, 1, 1));
+	scaleEntity(3, vector3d(3, 3, 3));
 
 	while (!done)
 	{
@@ -100,10 +102,18 @@ int main(int argc,char *argv[])
 			pos.x -= cosCam;
 			pos.z -= sinCam;
 		}
-		if (keys[SDL_SCANCODE_G])
-			moveEntity(2, vector3d(1, 0, 0));
-		if (keys[SDL_SCANCODE_F])
+		if (keys[SDL_SCANCODE_J])
 			moveEntity(2, vector3d(-1, 0, 0));
+		if (keys[SDL_SCANCODE_L])
+			moveEntity(2, vector3d(1, 0, 0));
+		if (keys[SDL_SCANCODE_I])
+			moveEntity(2, vector3d(0, 1, 0));
+		if (keys[SDL_SCANCODE_K])
+			moveEntity(2, vector3d(0, -1, 0));
+		if (keys[SDL_SCANCODE_COMMA])
+			moveEntity(2, vector3d(0, 0, 1));
+		if (keys[SDL_SCANCODE_PERIOD])
+			moveEntity(2, vector3d(0, 0, -1));
 
 		updateCamera(-camX * sens, -camY * sens, pos);
 

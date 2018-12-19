@@ -43,9 +43,9 @@ void moveEntity(Uint16 index, Vector3D delta) {
 		// check for collisions
 		for (Uint16 x = 0; x < MAX_ENTITIES; x++)
 			if (x != index && entity[x].model != NULL &&
-				abs(entity[index].modelMatrix[3][0] * entity[index].modelMatrix[0][0] - entity[x].modelMatrix[3][0] * entity[x].modelMatrix[0][0]) - 2 < 0 &&
-				abs(entity[index].modelMatrix[3][1] * entity[index].modelMatrix[1][1] - entity[x].modelMatrix[3][1] * entity[x].modelMatrix[1][1]) - 2 < 0 &&
-				abs(entity[index].modelMatrix[3][2] * entity[index].modelMatrix[2][2] - entity[x].modelMatrix[3][2] * entity[x].modelMatrix[2][2]) - 2 < 0)
+				abs(entity[index].modelMatrix[3][0] - entity[x].modelMatrix[3][0]) - (entity[index].modelMatrix[0][0] + entity[x].modelMatrix[0][0]) < 0 &&
+				abs(entity[index].modelMatrix[3][1] - entity[x].modelMatrix[3][1]) - (entity[index].modelMatrix[1][1] + entity[x].modelMatrix[1][1]) < 0 &&
+				abs(entity[index].modelMatrix[3][2] - entity[x].modelMatrix[3][2]) - (entity[index].modelMatrix[2][2] + entity[x].modelMatrix[2][2]) < 0)
 			{
 				// move back a bit upon detecting a collision so objects dont get stuck
 				entity[index].modelMatrix[3][0] -= delta.x / spliceMax;
