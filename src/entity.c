@@ -40,8 +40,8 @@ void moveEntity(Uint16 index, Vector3D delta) {
 	Uint16 spliceMax = (abs(delta.x) + abs(delta.y) + abs(delta.z)) * 100;
 	ceil(spliceMax);
 	for (Uint16 splice = 0; splice < spliceMax; splice++) {
-		// check for collisions
 		for (Uint16 x = 0; x < MAX_ENTITIES; x++)
+			// check for collisions
 			if (x != index && entity[x].model != NULL &&
 				abs(entity[index].modelMatrix[3][0] - entity[x].modelMatrix[3][0]) - (entity[index].modelMatrix[0][0] + entity[x].modelMatrix[0][0]) < 0 &&
 				abs(entity[index].modelMatrix[3][1] - entity[x].modelMatrix[3][1]) - (entity[index].modelMatrix[1][1] + entity[x].modelMatrix[1][1]) < 0 &&

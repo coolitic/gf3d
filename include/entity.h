@@ -26,7 +26,7 @@ void drawEntities(Uint32 bufferFrame, VkCommandBuffer commandBuffer);
  */
 Uint16 findEntity(TextLine name);
 /**
- * @brief move entity by delta
+ * @brief move entity by the delta, and check for collisions
  * @param index the entity index
  * @param delta the change in position
  */
