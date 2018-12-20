@@ -61,9 +61,11 @@ int main(int argc,char *argv[])
 		SDL_PumpEvents();   // update SDL's internal event structures
 		keys = SDL_GetKeyboardState(NULL); // get the keyboard state for this frame
 		SDL_GetRelativeMouseState(&cursorX, &cursorY);
+
 		// Update absolute yaw and pitch for the camera
 		camX += cursorX * sens;
 		camY += cursorY * sens;
+
 		// Reset yaw after doing a 360 degree turn
 		while (camX > 2 * M_PI)
 			camX -= 2 * M_PI;
@@ -77,6 +79,7 @@ int main(int argc,char *argv[])
 
 		cosCam = cos(camX);
 		sinCam = sin(camX);
+
 		// if-else block for handling key events that shouldn't repeat
 		if (keys[SDL_SCANCODE_H]) {
 			if (repeat == 0) {
@@ -110,6 +113,7 @@ int main(int argc,char *argv[])
 			pos.x -= cosCam;
 			pos.z -= sinCam;
 		}
+
 		if (keys[SDL_SCANCODE_J])
 			moveEntity(2, vector3d(-1, 0, 0));
 		if (keys[SDL_SCANCODE_L])
@@ -123,13 +127,13 @@ int main(int argc,char *argv[])
 		if (keys[SDL_SCANCODE_PERIOD])
 			moveEntity(2, vector3d(0, 0, -1));
 
-		updateCamera(-camX, -camY, pos);
-
         //update game things here
 		rotateEntity(0, vector3d(0, 0.05, 0));
 
-        // configure render command for graphics command pool
-        // for each mesh, get a command and configure it from the pool
+		updateCamera(-camX, -camY, pos);
+
+        /* configure render command for graphics command pool
+        for each mesh, get a command and configure it from the pool*/
         bufferFrame = gf3d_vgraphics_render_begin();
         commandBuffer = gf3d_command_rendering_begin(bufferFrame);
 

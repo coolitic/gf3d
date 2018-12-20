@@ -37,8 +37,7 @@ Uint16 findEntity(TextLine name) {
 
 void moveEntity(Uint16 index, Vector3D delta) {
 	// scale accuracy with speed
-	Uint16 spliceMax = (abs(delta.x) + abs(delta.y) + abs(delta.z)) * 100;
-	ceil(spliceMax);
+	Uint16 spliceMax = ceil((abs(delta.x) + abs(delta.y) + abs(delta.z)) * 100);
 	for (Uint16 splice = 0; splice < spliceMax; splice++) {
 		for (Uint16 x = 0; x < MAX_ENTITIES; x++)
 			// check for collisions
