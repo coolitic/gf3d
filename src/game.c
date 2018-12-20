@@ -9,30 +9,37 @@
 #include "gf3d_camera.h"
 #include "gf3d_vector.h"
 #include "gf3d_texture.h"
+#include <SDL_mixer.h>
 #include "entity.h"
 
-int main(int argc,char *argv[])
+int main(int argc, char *argv[])
 {
-    int done = 0;
-    const Uint8 * keys;
-    Uint32 bufferFrame = 0;
-    VkCommandBuffer commandBuffer;
+	int done = 0;
+	const Uint8 * keys;
+	Uint32 bufferFrame = 0;
+	VkCommandBuffer commandBuffer;
 	float sens = 0.001;
 
-    init_logger("gf3d.log");    
-    slog("gf3d begin");
-    gf3d_vgraphics_init(
-        "gf3d",                 //program name
-        1200,                   //screen width
-        700,                    //screen height
-        vector4d(0.51,0.75,1,1),//background color
-        0,                      //fullscreen
-        0                       //validation
-    );
-    
-    // main game loop
-    slog("gf3d main loop begin");
-    loadEntity("agumon", "agumon");
+	// Music code
+	Mix_OpenAudio(44100, 0x8010, 2, 1024);
+	Mix_Init(MIX_INIT_OGG);
+	Mix_AllocateChannels(2);
+	Mix_Music *music;
+
+	init_logger("gf3d.log");
+	slog("gf3d begin");
+	gf3d_vgraphics_init(
+		"gf3d",                 //program name
+		1200,                   //screen width
+		700,                    //screen height
+		vector4d(0.51, 0.75, 1, 1),//background color
+		0,                      //fullscreen
+		0                       //validation
+	);
+
+	// main game loop
+	slog("gf3d main loop begin");
+	loadEntity("agumon", "agumon");
 	loadEntity("cube", "cube");
 	loadEntity("cube1", "cube");
 	loadEntity("cube2", "cube");
@@ -46,6 +53,16 @@ int main(int argc,char *argv[])
 	float cosCam, sinCam;
 	SDL_KeyboardEvent keyEvent;
 	Uint8 repeat = 0; // for filtering out some repeating keys
+
+	music = Mix_LoadMUS("music/music.ogg");
+
+	if (!music)
+		slog(Mix_GetError());
+	else {
+		Mix_PlayMusic(music, -1);
+		slog("music loaded");
+		atexit(Mix_Quit);
+	}
 
 	// setup starting scene
 	posEntity(0, vector3d(0, 0, 20));
