@@ -1,7 +1,8 @@
 #include "gf3d_pipeline.h"
 #include "gf3d_swapchain.h"
+#include "gf3d_vgraphics.h"
 #include "gf3d_shaders.h"
-
+#include "gf3d_model.h"
 #include <string.h>
 #include <stdio.h>
 #include "simple_logger.h"
@@ -31,6 +32,7 @@ void gf3d_pipeline_init(Uint32 max_pipelines)
     }
     gf3d_pipeline.maxPipelines = max_pipelines;
     atexit(gf3d_pipeline_close);
+    slog("pipeline system initialized");
 }
 
 void gf3d_pipeline_close()
@@ -61,6 +63,38 @@ Pipeline *gf3d_pipeline_new()
     return NULL;
 }
 
+VkFormat gf3d_pipeline_find_supported_format(VkFormat * candidates, Uint32 candidateCount, VkImageTiling tiling, VkFormatFeatureFlags features)
+{
+    int i;
+    VkFormatProperties props = {0};
+    for (i = 0; i < candidateCount;i++)
+    {
+        vkGetPhysicalDeviceFormatProperties(gf3d_vgraphics_get_default_physical_device(), candidates[i], &props);
+
+        if (tiling == VK_IMAGE_TILING_LINEAR && (props.linearTilingFeatures & features) == features)
+        {
+            return candidates[i];
+        }
+        else if (tiling == VK_IMAGE_TILING_OPTIMAL && (props.optimalTilingFeatures & features) == features)
+        {
+            return candidates[i];
+        }
+    }
+
+    slog("failed to find supported format!");
+    return VK_NULL_HANDLE;
+}
+
+VkFormat gf3d_pipeline_find_depth_format()
+{
+    VkFormat formats[] = {VK_FORMAT_D32_SFLOAT, VK_FORMAT_D32_SFLOAT_S8_UINT, VK_FORMAT_D24_UNORM_S8_UINT};
+    return gf3d_pipeline_find_supported_format(
+        formats,3,
+        VK_IMAGE_TILING_OPTIMAL,
+        VK_FORMAT_FEATURE_DEPTH_STENCIL_ATTACHMENT_BIT
+    );
+}
+
 void gf3d_pipeline_render_pass_setup(Pipeline *pipe)
 {
     VkAttachmentDescription colorAttachment = {0};
@@ -68,7 +102,22 @@ void gf3d_pipeline_render_pass_setup(Pipeline *pipe)
     VkSubpassDescription subpass = {0};
     VkRenderPassCreateInfo renderPassInfo = {0};
     VkSubpassDependency dependency = {0};
+    VkAttachmentDescription depthAttachment = {0};
+    VkAttachmentReference depthAttachmentRef = {0};
+    VkAttachmentDescription attachments[2];
     
+    depthAttachmentRef.attachment = 1;
+    depthAttachmentRef.layout = VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL;
+    
+    depthAttachment.format = gf3d_pipeline_find_depth_format();
+    depthAttachment.samples = VK_SAMPLE_COUNT_1_BIT;
+    depthAttachment.loadOp = VK_ATTACHMENT_LOAD_OP_CLEAR;
+    depthAttachment.storeOp = VK_ATTACHMENT_STORE_OP_DONT_CARE;
+    depthAttachment.stencilLoadOp = VK_ATTACHMENT_LOAD_OP_DONT_CARE;
+    depthAttachment.stencilStoreOp = VK_ATTACHMENT_STORE_OP_DONT_CARE;
+    depthAttachment.initialLayout = VK_IMAGE_LAYOUT_UNDEFINED;
+    depthAttachment.finalLayout = VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL;
+
     dependency.srcSubpass = VK_SUBPASS_EXTERNAL;
     dependency.dstSubpass = 0;
     dependency.srcStageMask = VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT;
@@ -91,10 +140,14 @@ void gf3d_pipeline_render_pass_setup(Pipeline *pipe)
     subpass.pipelineBindPoint = VK_PIPELINE_BIND_POINT_GRAPHICS;
     subpass.colorAttachmentCount = 1;
     subpass.pColorAttachments = &colorAttachmentRef;
+    subpass.pDepthStencilAttachment = &depthAttachmentRef;
+    
+    memcpy(&attachments[0],&colorAttachment,sizeof(VkAttachmentDescription));
+    memcpy(&attachments[1],&depthAttachment,sizeof(VkAttachmentDescription));
     
     renderPassInfo.sType = VK_STRUCTURE_TYPE_RENDER_PASS_CREATE_INFO;
-    renderPassInfo.attachmentCount = 1;
-    renderPassInfo.pAttachments = &colorAttachment;
+    renderPassInfo.attachmentCount = 2;
+    renderPassInfo.pAttachments = attachments;
     renderPassInfo.subpassCount = 1;
     renderPassInfo.pSubpasses = &subpass;
     renderPassInfo.dependencyCount = 1;
@@ -125,7 +178,8 @@ Pipeline *gf3d_pipeline_graphics_load(VkDevice device,char *vertFile,char *fragF
     VkPipelineMultisampleStateCreateInfo multisampling = {0};
     VkPipelineColorBlendAttachmentState colorBlendAttachment = {0};
     VkPipelineColorBlendStateCreateInfo colorBlending = {0};
-
+    VkPipelineDepthStencilStateCreateInfo depthStencil = {0};
+    
     pipe = gf3d_pipeline_new();
     if (!pipe)return NULL;
 
@@ -137,6 +191,15 @@ Pipeline *gf3d_pipeline_graphics_load(VkDevice device,char *vertFile,char *fragF
 
     pipe->device = device;
     
+    depthStencil.sType = VK_STRUCTURE_TYPE_PIPELINE_DEPTH_STENCIL_STATE_CREATE_INFO;
+    depthStencil.depthTestEnable = VK_TRUE;
+    depthStencil.depthWriteEnable = VK_TRUE;
+    depthStencil.depthCompareOp = VK_COMPARE_OP_LESS;    
+    depthStencil.depthBoundsTestEnable = VK_FALSE;
+    depthStencil.minDepthBounds = 0.0f; // Optional
+    depthStencil.maxDepthBounds = 1.0f; // Optional
+    depthStencil.stencilTestEnable = VK_FALSE;
+
     vertShaderStageInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_SHADER_STAGE_CREATE_INFO;
     vertShaderStageInfo.stage = VK_SHADER_STAGE_VERTEX_BIT;
     vertShaderStageInfo.module = pipe->vertModule;
@@ -151,10 +214,9 @@ Pipeline *gf3d_pipeline_graphics_load(VkDevice device,char *vertFile,char *fragF
     shaderStages[1] = fragShaderStageInfo;
     
     vertexInputInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_VERTEX_INPUT_STATE_CREATE_INFO;
-    vertexInputInfo.vertexBindingDescriptionCount = 0;
-    vertexInputInfo.pVertexBindingDescriptions = NULL; // Optional
-    vertexInputInfo.vertexAttributeDescriptionCount = 0;
-    vertexInputInfo.pVertexAttributeDescriptions = NULL; // Optional    return pipe;
+    vertexInputInfo.vertexBindingDescriptionCount = 1;
+    vertexInputInfo.pVertexBindingDescriptions = gf3d_mesh_get_bind_description();; // Optional
+    vertexInputInfo.pVertexAttributeDescriptions = gf3d_mesh_get_attribute_descriptions(&vertexInputInfo.vertexAttributeDescriptionCount); // Optional    
 
     // TODO: pull all this information from config file
     inputAssembly.sType = VK_STRUCTURE_TYPE_PIPELINE_INPUT_ASSEMBLY_STATE_CREATE_INFO;
@@ -183,13 +245,15 @@ Pipeline *gf3d_pipeline_graphics_load(VkDevice device,char *vertFile,char *fragF
     rasterizer.rasterizerDiscardEnable = VK_FALSE;
     rasterizer.polygonMode = VK_POLYGON_MODE_FILL;
     rasterizer.lineWidth = 1.0f;
+//    rasterizer.cullMode = VK_CULL_MODE_BACK_BIT;
+//    rasterizer.frontFace = VK_FRONT_FACE_CLOCKWISE;
     rasterizer.cullMode = VK_CULL_MODE_BACK_BIT;
-    rasterizer.frontFace = VK_FRONT_FACE_CLOCKWISE;
+    rasterizer.frontFace = VK_FRONT_FACE_COUNTER_CLOCKWISE;
     rasterizer.depthBiasEnable = VK_FALSE;
     rasterizer.depthBiasConstantFactor = 0.0f; // Optional
     rasterizer.depthBiasClamp = 0.0f; // Optional
     rasterizer.depthBiasSlopeFactor = 0.0f; // Optional
-    
+
     multisampling.sType = VK_STRUCTURE_TYPE_PIPELINE_MULTISAMPLE_STATE_CREATE_INFO;
     multisampling.sampleShadingEnable = VK_FALSE;
     multisampling.rasterizationSamples = VK_SAMPLE_COUNT_1_BIT;
@@ -218,8 +282,8 @@ Pipeline *gf3d_pipeline_graphics_load(VkDevice device,char *vertFile,char *fragF
     colorBlending.blendConstants[3] = 0.0f; // Optional
 
     pipelineLayoutInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_LAYOUT_CREATE_INFO;
-    pipelineLayoutInfo.setLayoutCount = 0; // Optional
-    pipelineLayoutInfo.pSetLayouts = NULL; // Optional
+    pipelineLayoutInfo.setLayoutCount = 1; // Optional
+    pipelineLayoutInfo.pSetLayouts = gf3d_model_get_descriptor_set_layout(); // Optional
     pipelineLayoutInfo.pushConstantRangeCount = 0; // Optional
     pipelineLayoutInfo.pPushConstantRanges = NULL; // Optional
 
@@ -248,8 +312,9 @@ Pipeline *gf3d_pipeline_graphics_load(VkDevice device,char *vertFile,char *fragF
     pipelineInfo.subpass = 0;
     pipelineInfo.basePipelineHandle = VK_NULL_HANDLE; // Optional
     pipelineInfo.basePipelineIndex = -1; // Optional
+    pipelineInfo.pDepthStencilState = &depthStencil;
     
-    if (vkCreateGraphicsPipelines(device, VK_NULL_HANDLE, 1, &pipelineInfo, NULL, &pipe->graphicsPipeline) != VK_SUCCESS)
+    if (vkCreateGraphicsPipelines(device, VK_NULL_HANDLE, 1, &pipelineInfo, NULL, &pipe->pipeline) != VK_SUCCESS)
     {   
         slog("failed to create graphics pipeline!");
         gf3d_pipeline_free(pipe);
@@ -262,11 +327,11 @@ void gf3d_pipeline_free(Pipeline *pipe)
 {
     if (!pipe)return;
     if (!pipe->inUse)return;
-    if (pipe->graphicsPipeline)
+    if (pipe->pipeline != VK_NULL_HANDLE)
     {
-        vkDestroyPipeline(pipe->device, pipe->graphicsPipeline, NULL);
+        vkDestroyPipeline(pipe->device, pipe->pipeline, NULL);
     }
-    if (pipe->pipelineLayout)
+    if (pipe->pipelineLayout != VK_NULL_HANDLE)
     {
         vkDestroyPipelineLayout(pipe->device, pipe->pipelineLayout, NULL);
     }

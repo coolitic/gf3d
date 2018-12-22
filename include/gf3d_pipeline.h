@@ -8,17 +8,17 @@
 
 typedef struct
 {
-    Bool                inUse;
-    VkPipeline          graphicsPipeline;
-    VkRenderPass        renderPass;
-    VkPipelineLayout    pipelineLayout;
-    size_t              vertSize;
-    char               *vertShader;
-    VkShaderModule      vertModule;
-    size_t              fragSize;
-    char               *fragShader;
-    VkShaderModule      fragModule;
-    VkDevice            device;
+    Bool                    inUse;
+    VkPipeline              pipeline;
+    VkRenderPass            renderPass;
+    VkPipelineLayout        pipelineLayout;
+    size_t                  vertSize;
+    char                   *vertShader;
+    VkShaderModule          vertModule;
+    size_t                  fragSize;
+    char                   *fragShader;
+    VkShaderModule          fragModule;
+    VkDevice                device;
 }Pipeline;
 
 /**
@@ -40,5 +40,7 @@ void gf3d_pipeline_free(Pipeline *pipe);
  * @returns NULL on error (see logs) or a pointer to a pipeline
  */
 Pipeline *gf3d_pipeline_graphics_load(VkDevice device,char *vertFile,char *fragFile,VkExtent2D extent);
+
+VkFormat gf3d_pipeline_find_depth_format();
 
 #endif

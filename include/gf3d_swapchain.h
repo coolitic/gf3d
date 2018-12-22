@@ -46,6 +46,7 @@ void gf3d_swapchain_setup_frame_buffers(Pipeline *pipe);
 void gf3d_swapchain_close();
 
 Uint32 gf3d_swapchain_get_frame_buffer_count();
+Uint32 gf3d_swapchain_get_swap_image_count();
 
 /**
  * @brief get the swapchain to use for rendering
@@ -58,6 +59,13 @@ VkSwapchainKHR gf3d_swapchain_get();
  * @return the framebuffer in question
  */
 VkFramebuffer gf3d_swapchain_get_frame_buffer_by_index(Uint32 index);
+
+
+void gf3d_swapchain_create_image(uint32_t width, uint32_t height, VkFormat format, VkImageTiling tiling, VkImageUsageFlags usage, VkMemoryPropertyFlags properties, VkImage* image, VkDeviceMemory* imageMemory);
+
+void gf3d_swapchain_transition_image_layout(VkImage image, VkFormat format, VkImageLayout oldLayout, VkImageLayout newLayout);
+
+void gf3d_swapchain_create_depth_image();
 
 
 #endif
